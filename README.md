@@ -1,6 +1,6 @@
 # Dyslexia Reader  Platform
 
-The web platform for Dyslexia Reader: a React dashboard and Java Spring Boot backend for account services, synchronized reading preferences, and cloud text-to-speech.
+The web platform for Dyslexia Reader: a React dashboard and Java Spring Boot backend for account services, synchronized reading preferences, and cloud text-to-speech. AWESOME
 
 **Repository:** [DyslexiaPlatform](https://github.com/Dyslexia-Project/DyslexiaPlatform). The native desktop client is maintained in [DyslexiaApp](https://github.com/Dyslexia-Project/DyslexiaApp).
 
