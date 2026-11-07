@@ -1,0 +1,146 @@
+# =============================================================================
+# DyslexiaReader-Platform — Spring Boot + React CI Pipeline
+# =============================================================================
+# Triggers : every pull-request targeting `main`  (and direct pushes to main)
+# Jobs     :
+#   1. schema-check   – validates sample profiles against JSON Schema
+#   2. backend-test   – compiles the Spring Boot app and runs `mvn test`
+#   3. frontend-build – installs npm deps and runs `npm run build`
+# =============================================================================
+
+name: Platform CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# ---------------------------------------------------------------------------
+# JOB 1 — Schema Contract Check
+# ---------------------------------------------------------------------------
+# Validates every JSON file inside docs/sample-profiles/ against the JSON
+# Schema at docs/contracts/reading-profile.schema.json using ajv-cli.
+# ---------------------------------------------------------------------------
+jobs:
+  schema-check:
+    name: Schema Contract Check (ajv-cli)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          # ADJUST: if your package.json lives in a subfolder (e.g., frontend/),
+          # add:  cache-dependency-path: frontend/package-lock.json
+
+      - name: Install ajv-cli
+        run: npm install -g ajv-cli ajv-formats
+
+      # ADJUST: change the paths below if your schema or samples live elsewhere.
+      - name: Validate sample profiles against schema
+        run: |
+          echo "Validating sample profiles..."
+          ajv validate \
+            --spec=draft2020 \
+            -c ajv-formats \
+            -s docs/contracts/reading-profile.schema.json \
+            -d "docs/sample-profiles/*.json"
+          echo "All sample profiles are valid."
+
+  # ---------------------------------------------------------------------------
+  # JOB 2 — Spring Boot Backend (Maven)
+  # ---------------------------------------------------------------------------
+  backend-test:
+    name: Spring Boot Tests (Maven)
+    runs-on: ubuntu-latest
+    needs: schema-check       # schema must pass before we spend compute on tests
+
+    # ADJUST: set the Java version your project targets (17 or 21 recommended
+    # for Spring Boot 3.x)
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+          # ADJUST: if your pom.xml lives in a subfolder (e.g., backend/),
+          # add: cache: "maven"  and later prefix mvn calls with:
+          #   working-directory: backend
+          cache: "maven"
+
+      # ADJUST: if your pom.xml is NOT in the repository root, add:
+      #   working-directory: backend
+      - name: Run Maven tests
+        run: mvn --batch-mode --no-transfer-progress test
+
+      # Optional: publish Surefire test reports as a CI summary
+      - name: Publish test results
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Maven Tests
+          path: "**/target/surefire-reports/TEST-*.xml"
+          reporter: java-junit
+          fail-on-error: false
+
+  # ---------------------------------------------------------------------------
+  # JOB 3 — React Frontend (npm)
+  # ---------------------------------------------------------------------------
+  frontend-build:
+    name: React Frontend Build (npm)
+    runs-on: ubuntu-latest
+    needs: schema-check       # schema must pass first
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          # ADJUST: if package.json is inside a subfolder (e.g., frontend/),
+          # change the cache-dependency-path below:
+          cache: "npm"
+          cache-dependency-path: |
+            package-lock.json
+            # frontend/package-lock.json   <-- uncomment if in subfolder
+
+      # ADJUST: if your React app is in a subfolder, replace the commands with:
+      #   working-directory: frontend
+      #   run: npm ci
+      - name: Install dependencies
+        run: npm ci
+        # working-directory: frontend    # <-- uncomment if in subfolder
+
+      # ADJUST: same working-directory note as above
+      - name: Production build
+        run: npm run build
+        # working-directory: frontend    # <-- uncomment if in subfolder
+        env:
+          # Fail the build if there are any CI-specific warnings
+          CI: true
+
+      # Optional: upload the production build as an artifact for inspection
+      - name: Upload frontend build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          # ADJUST: change `build/` to `dist/` if you use Vite instead of CRA
+          name: react-build-${{ github.sha }}
+          path: build/
+          # path: frontend/build/     # <-- uncomment if in subfolder
+          retention-days: 7
+          if-no-files-found: warn
