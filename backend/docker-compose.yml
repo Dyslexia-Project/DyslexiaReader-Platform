@@ -1,0 +1,30 @@
+name: dyslexiaapp
+
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: dyslexia_reader
+      POSTGRES_USER: dyslexia
+      POSTGRES_PASSWORD: dyslexia
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dyslexia -d dyslexia_reader"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/dyslexia_reader
+      SPRING_DATASOURCE_USERNAME: dyslexia
+      SPRING_DATASOURCE_PASSWORD: dyslexia
+    ports:
+      - "8080:8080"
