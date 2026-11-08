@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "provider": "cloud",
+  "voiceId": "en-US-Neural2-F",
+  "language": "en-US",
+  "speed": 1.0,
+  "cacheHit": false,
+  "cacheHash": "adf2c98a6085ec7bccf0614744200b4c89b19087a8cde2d94c5c2a7ce17ef199",
+  "characterCount": 68,
+  "audioMimeType": "audio/mpeg",
+  "audioBase64": "//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+  "timingGranularity": "WORD_AND_SENTENCE",
+  "speechMarks": [
+    {
+      "time": 0,
+      "duration": 2150,
+      "type": "sentence",
+      "start": 0,
+      "end": 36,
+      "value": "Dyslexia Reader works offline first."
+    },
+    {
+      "time": 0,
+      "duration": 410,
+      "type": "word",
+      "start": 0,
+      "end": 8,
+      "value": "Dyslexia"
+    },
+    {
+      "time": 410,
+      "duration": 330,
+      "type": "word",
+      "start": 9,
+      "end": 15,
+      "value": "Reader"
+    },
+    {
+      "time": 740,
+      "duration": 340,
+      "type": "word",
+      "start": 16,
+      "end": 21,
+      "value": "works"
+    },
+    {
+      "time": 1080,
+      "duration": 520,
+      "type": "word",
+      "start": 22,
+      "end": 29,
+      "value": "offline"
+    },
+    {
+      "time": 1600,
+      "duration": 550,
+      "type": "word",
+      "start": 30,
+      "end": 36,
+      "value": "first."
+    },
+    {
+      "time": 2150,
+      "duration": 2100,
+      "type": "sentence",
+      "start": 37,
+      "end": 68,
+      "value": "Cloud voices add neural speech."
+    },
+    {
+      "time": 2150,
+      "duration": 380,
+      "type": "word",
+      "start": 37,
+      "end": 42,
+      "value": "Cloud"
+    },
+    {
+      "time": 2530,
+      "duration": 420,
+      "type": "word",
+      "start": 43,
+      "end": 49,
+      "value": "voices"
+    },
+    {
+      "time": 2950,
+      "duration": 250,
+      "type": "word",
+      "start": 50,
+      "end": 53,
+      "value": "add"
+    },
+    {
+      "time": 3200,
+      "duration": 450,
+      "type": "word",
+      "start": 54,
+      "end": 60,
+      "value": "neural"
+    },
+    {
+      "time": 3650,
+      "duration": 600,
+      "type": "word",
+      "start": 61,
+      "end": 68,
+      "value": "speech."
+    }
+  ]
+}
