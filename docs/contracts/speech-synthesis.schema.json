@@ -1,0 +1,305 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/Dyslexia-Project/DyslexiaPlatform/blob/main/docs/contracts/speech-synthesis.schema.json",
+  "title": "Dyslexia Reader - Speech Synthesis",
+  "description": "Shared contract for cloud speech synthesis, word/sentence speech marks, voice catalogs, and fallback recommendations.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "provider",
+    "voiceId",
+    "language",
+    "speed",
+    "cacheHit",
+    "cacheHash",
+    "characterCount",
+    "audioMimeType",
+    "audioBase64",
+    "timingGranularity",
+    "speechMarks"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1,
+      "default": 1,
+      "description": "Version of the speech synthesis contract."
+    },
+    "provider": {
+      "type": "string",
+      "const": "cloud",
+      "default": "cloud",
+      "description": "TTS provider tier ('cloud' for platform speech synthesis)."
+    },
+    "voiceId": {
+      "type": "string",
+      "description": "Cloud voice identifier used for synthesis."
+    },
+    "language": {
+      "type": "string",
+      "enum": [
+        "en-US",
+        "en-GB",
+        "ro-RO"
+      ],
+      "description": "BCP-47 language tag of the synthesized audio."
+    },
+    "speed": {
+      "type": "number",
+      "minimum": 0.25,
+      "maximum": 4.0,
+      "default": 1.0,
+      "description": "Speech rate playback multiplier."
+    },
+    "cacheHit": {
+      "type": "boolean",
+      "description": "Whether the response was served from the server L1/L2 cache."
+    },
+    "cacheHash": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "Deterministic SHA-256 hash of normalized_text + '|' + voiceId + '|' + speed."
+    },
+    "characterCount": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Total character count of synthesized text."
+    },
+    "audioMimeType": {
+      "type": "string",
+      "default": "audio/mpeg",
+      "description": "MIME type of the base64 audio payload."
+    },
+    "audioBase64": {
+      "type": "string",
+      "description": "Base64 encoded audio bytes."
+    },
+    "timingGranularity": {
+      "type": "string",
+      "enum": [
+        "WORD_AND_SENTENCE",
+        "SENTENCE_ONLY",
+        "NONE"
+      ],
+      "description": "Synchronization capability level for Bimodal Highlighting (Cases 1, 2, and 3)."
+    },
+    "speechMarks": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/SpeechMark"
+      },
+      "description": "Chronological sentence and word timing marks for bimodal visual synchronization."
+    }
+  },
+  "$defs": {
+    "SpeechMark": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "time",
+        "duration",
+        "type",
+        "start",
+        "end",
+        "value"
+      ],
+      "properties": {
+        "time": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Audio playback start offset in milliseconds from beginning of stream."
+        },
+        "duration": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Duration of the mark in milliseconds."
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "sentence",
+            "word"
+          ],
+          "description": "Speech mark granularity type."
+        },
+        "start": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Starting Unicode character index in original source text."
+        },
+        "end": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Ending Unicode character index in original source text."
+        },
+        "value": {
+          "type": "string",
+          "description": "Text content corresponding to the speech mark."
+        }
+      }
+    },
+    "SynthesizeRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "text",
+        "voiceId"
+      ],
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2500,
+          "description": "Plain text string to synthesize."
+        },
+        "voiceId": {
+          "type": "string",
+          "description": "Identifier of the cloud voice."
+        },
+        "speed": {
+          "type": "number",
+          "minimum": 0.25,
+          "maximum": 4.0,
+          "default": 1.0,
+          "description": "Speech rate playback multiplier."
+        },
+        "language": {
+          "type": "string",
+          "enum": [
+            "en-US",
+            "en-GB",
+            "ro-RO"
+          ],
+          "description": "Target language tag."
+        }
+      }
+    },
+    "VoiceCatalogResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "provider",
+        "engine",
+        "available",
+        "voices"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "type": "integer",
+          "const": 1,
+          "default": 1,
+          "description": "Catalog schema version."
+        },
+        "provider": {
+          "type": "string",
+          "const": "cloud",
+          "default": "cloud",
+          "description": "Speech provider tier."
+        },
+        "engine": {
+          "type": "string",
+          "description": "Underlying cloud synthesis engine (e.g. google-cloud-tts)."
+        },
+        "available": {
+          "type": "boolean",
+          "description": "Indicates whether the cloud TTS backend is operational."
+        },
+        "voices": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "voiceId",
+              "displayName",
+              "language",
+              "gender",
+              "provider",
+              "quality",
+              "timingGranularity"
+            ],
+            "properties": {
+              "voiceId": {
+                "type": "string",
+                "description": "Voice identifier."
+              },
+              "displayName": {
+                "type": "string",
+                "description": "Human-readable voice name."
+              },
+              "language": {
+                "type": "string",
+                "enum": [
+                  "en-US",
+                  "en-GB",
+                  "ro-RO"
+                ],
+                "description": "BCP-47 language tag."
+              },
+              "gender": {
+                "type": "string",
+                "enum": [
+                  "FEMALE",
+                  "MALE",
+                  "NEUTRAL"
+                ],
+                "description": "Voice gender."
+              },
+              "provider": {
+                "type": "string",
+                "const": "cloud",
+                "description": "Provider tier."
+              },
+              "quality": {
+                "type": "string",
+                "enum": [
+                  "STANDARD",
+                  "WAVENET",
+                  "NEURAL2",
+                  "JOURNEY",
+                  "STUDIO"
+                ],
+                "description": "Voice audio quality tier."
+              },
+              "timingGranularity": {
+                "type": "string",
+                "enum": [
+                  "WORD_AND_SENTENCE",
+                  "SENTENCE_ONLY",
+                  "NONE"
+                ],
+                "description": "Timing synchronization capability."
+              }
+            }
+          }
+        }
+      }
+    },
+    "SpeechErrorResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "error",
+        "fallbackRecommendation",
+        "message"
+      ],
+      "properties": {
+        "error": {
+          "type": "string",
+          "description": "Machine-readable error code."
+        },
+        "fallbackRecommendation": {
+          "type": "string",
+          "const": "LOCAL_TTS",
+          "description": "Recommendation for the client to switch to local TTS."
+        },
+        "message": {
+          "type": "string",
+          "description": "Human-readable error explanation."
+        }
+      }
+    }
+  }
+}
