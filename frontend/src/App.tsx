@@ -1,122 +1,117 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useState, useRef, type MouseEvent } from 'react';
+import type { ReadingProfile, FontFamily } from './types/profile';
+import { DEFAULT_PROFILE } from './types/profile';
+import { ProfileEditor } from './components/ProfileEditor';
+import { applyBionicReading, applySyllableSplit } from './utils/textTransform';
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const [profile, setProfile] = useState<ReadingProfile>(DEFAULT_PROFILE);
+  const [sampleText, setSampleText] = useState<string>(
+    'Dyslexia is a neurodivergent condition that affects how the brain processes written text. Adjusting typographic controls, letter spacing, and line focus significantly improves readability and comprehension.'
+  );
+
+  const [rulerY, setRulerY] = useState<number>(0);
+  const previewRef = useRef<HTMLDivElement>(null);
+
+  const handleMouseMove = (e: MouseEvent<HTMLDivElement>) => {
+    if (!profile.readingRuler || !previewRef.current) return;
+    const rect = previewRef.current.getBoundingClientRect();
+    setRulerY(e.clientY - rect.top);
+  };
+
+  const getThemeStyles = () => {
+    switch (profile.theme) {
+      case 'sepia': return { backgroundColor: '#f4ecd8', color: '#5b4636' };
+      case 'dark': return { backgroundColor: '#1e1e1e', color: '#f0f0f0' };
+      case 'high-contrast': return { backgroundColor: '#000000', color: '#ffff00' };
+      case 'light':
+      default: return { backgroundColor: '#ffffff', color: '#111111' };
+    }
+  };
+
+  // Maps FontFamily enum values to exact CSS font family declarations
+  const getFontFamilyCSS = (font: FontFamily): string => {
+    switch (font) {
+      case 'OpenDyslexic':
+        return '"OpenDyslexic", "OpenDyslexicRegular", sans-serif';
+      case 'Lexend':
+        return '"Lexend", sans-serif';
+      case 'Atkinson Hyperlegible':
+        return '"Atkinson Hyperlegible", sans-serif';
+      case 'Sans-Serif':
+      default:
+        return 'system-ui, -apple-system, sans-serif';
+    }
+  };
+
+  const getProcessedText = () => {
+    let text = sampleText;
+    if (profile.syllableSplit) {
+      text = applySyllableSplit(text);
+    }
+    if (profile.bionicReading) {
+      return applyBionicReading(text);
+    }
+    return text;
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div style={{ padding: '24px', fontFamily: 'system-ui, sans-serif' }}>
+      <h1>Dyslexia Reading Playground</h1>
 
-      <div className="ticks"></div>
+      <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', marginTop: '20px' }}>
+        <ProfileEditor profile={profile} onChange={setProfile} />
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+        <div style={{ flex: 1, minWidth: '320px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div>
+            <label><b>Sample Text (Edit or paste custom text):</b></label>
+            <textarea
+              value={sampleText}
+              onChange={(e) => setSampleText(e.target.value)}
+              rows={3}
+              style={{ width: '100%', padding: '10px', marginTop: '8px', fontSize: '14px', borderRadius: '6px', border: '1px solid #ccc', boxSizing: 'border-box' }}
+            />
+          </div>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+          <div
+            ref={previewRef}
+            onMouseMove={handleMouseMove}
+            style={{
+              position: 'relative',
+              padding: '30px',
+              borderRadius: '8px',
+              border: '2px dashed #bbb',
+              overflow: 'hidden',
+              minHeight: '250px',
+              ...getThemeStyles(),
+              fontFamily: getFontFamilyCSS(profile.fontFamily),
+              fontSize: `${profile.fontSize}px`,
+              letterSpacing: `${profile.letterSpacing}px`,
+              wordSpacing: `${profile.wordSpacing}px`,
+              lineHeight: profile.lineHeight,
+            }}
+          >
+            {profile.readingRuler && (
+              <div
+                style={{
+                  position: 'absolute',
+                  left: 0,
+                  right: 0,
+                  top: `${rulerY - 20}px`,
+                  height: '40px',
+                  backgroundColor: 'rgba(255, 235, 59, 0.35)',
+                  borderTop: '2px solid rgba(255, 193, 7, 0.8)',
+                  borderBottom: '2px solid rgba(255, 193, 7, 0.8)',
+                  pointerEvents: 'none',
+                  transition: 'top 0.05s ease-out',
+                }}
+              />
+            )}
+
+            <div dangerouslySetInnerHTML={{ __html: getProcessedText() }} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
-
-export default App
