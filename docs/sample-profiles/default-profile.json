@@ -1,27 +1,15 @@
 {
-  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-  "name": "Default Dyslexia-Friendly",
-  "version": 1,
-  "typography": {
-    "fontFamily": "OpenDyslexic",
-    "fontSize": 18,
-    "lineSpacing": 1.8,
-    "letterSpacing": 2,
-    "wordSpacing": 10,
-    "lineWidth": 70
-  },
-  "colors": {
-    "textColor": "#1a1a1a",
-    "backgroundColor": "#fffff0",
-    "contrastPreset": "sepia"
-  },
-  "speech": {
-    "provider": "local",
-    "voiceId": "Microsoft David Desktop",
-    "speed": 1.0,
-    "volume": 0.85
-  },
-  "syncEnabled": false,
-  "createdAt": "2026-11-07T00:00:00Z",
-  "updatedAt": "2026-11-07T00:00:00Z"
+  "schemaVersion": 1,
+  "fontFamily": "Lexend",
+  "fontSizePt": 20,
+  "letterSpacingEm": 0.02,
+  "wordSpacingEm": 0.1,
+  "lineHeight": 1.6,
+  "lineWidthCh": 65,
+  "theme": "warm-cream",
+  "aids": {
+    "bionicReading": false,
+    "readingRuler": false,
+    "bimodalHighlighting": true
+  }
 }
