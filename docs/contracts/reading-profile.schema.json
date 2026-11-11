@@ -1,132 +1,109 @@
 {
-  "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://dyslexiareader.example.com/schemas/reading-profile.schema.json",
-  "title": "ReadingProfile",
-  "description": "Schema for a DyslexiaReader user reading profile.",
-  "type": "object",
-  "required": ["id", "name", "version", "typography", "colors", "speech"],
-  "additionalProperties": false,
-  "properties": {
-    "id": {
-      "type": "string",
-      "format": "uuid",
-      "description": "Unique profile identifier (UUID v4)."
-    },
-    "name": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 100,
-      "description": "Human-readable profile name shown in the UI."
-    },
-    "version": {
-      "type": "integer",
-      "minimum": 1,
-      "description": "Schema version for migration purposes."
-    },
-    "typography": {
-      "type": "object",
-      "required": ["fontFamily", "fontSize", "lineSpacing", "letterSpacing", "wordSpacing", "lineWidth"],
-      "additionalProperties": false,
-      "properties": {
-        "fontFamily": {
-          "type": "string",
-          "description": "CSS font-family name, e.g. 'OpenDyslexic', 'Arial', 'Lexie Readable'."
-        },
-        "fontSize": {
-          "type": "number",
-          "minimum": 8,
-          "maximum": 72,
-          "description": "Font size in points."
-        },
-        "lineSpacing": {
-          "type": "number",
-          "minimum": 1.0,
-          "maximum": 4.0,
-          "description": "Line height multiplier (e.g. 1.5 = 150%)."
-        },
-        "letterSpacing": {
-          "type": "number",
-          "minimum": -2,
-          "maximum": 20,
-          "description": "Additional letter spacing in pixels."
-        },
-        "wordSpacing": {
-          "type": "number",
-          "minimum": 0,
-          "maximum": 50,
-          "description": "Additional word spacing in pixels."
-        },
-        "lineWidth": {
-          "type": "integer",
-          "minimum": 20,
-          "maximum": 120,
-          "description": "Maximum characters per line (soft wrap guide)."
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "https://github.com/Dyslexia-Project/DyslexiaPlatform/blob/main/docs/contracts/reading-profile.schema.json",
+    "title": "Dyslexia Reader - Reading Profile",
+    "description": "Shared reading preferences for desktop and web clients.",
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+      "schemaVersion",
+      "fontFamily",
+      "fontSizePt",
+      "letterSpacingEm",
+      "wordSpacingEm",
+      "lineHeight",
+      "lineWidthCh",
+      "theme",
+      "aids"
+    ],
+    "properties": {
+      "schemaVersion": {
+        "type": "integer",
+        "const": 1,
+        "default": 1,
+        "description": "Version of the reading profile contract."
+      },
+      "fontFamily": {
+        "type": "string",
+        "enum": [
+          "Lexend",
+          "Atkinson Hyperlegible",
+          "OpenDyslexic"
+        ],
+        "default": "Lexend",
+        "description": "Font used to display reading content."
+      },
+      "fontSizePt": {
+        "type": "number",
+        "minimum": 14,
+        "maximum": 48,
+        "default": 20,
+        "description": "Font size in typographic points."
+      },
+      "letterSpacingEm": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 0.2,
+        "default": 0.02,
+        "description": "Additional spacing between letters in em units."
+      },
+      "wordSpacingEm": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 0.5,
+        "default": 0.1,
+        "description": "Additional spacing between words in em units."
+      },
+      "lineHeight": {
+        "type": "number",
+        "minimum": 1,
+        "maximum": 2.5,
+        "default": 1.6,
+        "description": "Unitless line height multiplier."
+      },
+      "lineWidthCh": {
+        "type": "integer",
+        "minimum": 35,
+        "maximum": 100,
+        "default": 65,
+        "description": "Maximum reading text width in ch units."
+      },
+      "theme": {
+        "type": "string",
+        "enum": [
+          "warm-cream",
+          "sepia",
+          "dark-high-contrast"
+        ],
+        "default": "warm-cream",
+        "description": "Identifier of the selected reading color theme."
+      },
+      "aids": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "bionicReading",
+          "readingRuler",
+          "bimodalHighlighting"
+        ],
+        "properties": {
+          "bionicReading": {
+            "type": "boolean",
+            "default": false,
+            "description": "Enables bold emphasis on the beginning of words."
+          },
+          "readingRuler": {
+            "type": "boolean",
+            "default": false,
+            "description": "Enables a horizontal reading guide."
+          },
+          "bimodalHighlighting": {
+            "type": "boolean",
+            "default": true,
+            "description": "Enables synchronized text highlighting during speech playback when timing information is available."
+          }
         }
       }
-    },
-    "colors": {
-      "type": "object",
-      "required": ["textColor", "backgroundColor"],
-      "additionalProperties": false,
-      "properties": {
-        "textColor": {
-          "type": "string",
-          "pattern": "^#[0-9a-fA-F]{6}$",
-          "description": "Hex color code for text, e.g. '#1a1a1a'."
-        },
-        "backgroundColor": {
-          "type": "string",
-          "pattern": "^#[0-9a-fA-F]{6}$",
-          "description": "Hex color code for background, e.g. '#fffff0'."
-        },
-        "contrastPreset": {
-          "type": "string",
-          "enum": ["default", "high-contrast", "sepia", "night", "custom"],
-          "description": "Named contrast preset; 'custom' means manual hex values are used."
-        }
-      }
-    },
-    "speech": {
-      "type": "object",
-      "required": ["provider", "speed", "volume"],
-      "additionalProperties": false,
-      "properties": {
-        "provider": {
-          "type": "string",
-          "enum": ["local", "cloud"],
-          "description": "'local' = OS TTS engine; 'cloud' = cloud TTS provider."
-        },
-        "voiceId": {
-          "type": "string",
-          "description": "Voice identifier; OS voice name for local, provider voice ID for cloud."
-        },
-        "speed": {
-          "type": "number",
-          "minimum": 0.5,
-          "maximum": 3.0,
-          "description": "Playback speed multiplier."
-        },
-        "volume": {
-          "type": "number",
-          "minimum": 0.0,
-          "maximum": 1.0,
-          "description": "Volume level (0.0 = silent, 1.0 = full)."
-        }
-      }
-    },
-    "syncEnabled": {
-      "type": "boolean",
-      "description": "Whether this profile should synchronize with the platform."
-    },
-    "createdAt": {
-      "type": "string",
-      "format": "date-time",
-      "description": "ISO 8601 UTC timestamp when the profile was created."
-    },
-    "updatedAt": {
-      "type": "string",
-      "format": "date-time",
-      "description": "ISO 8601 UTC timestamp when the profile was last modified."
     }
   }
-}
+  

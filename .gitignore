@@ -1,0 +1,11 @@
+# Python virtual environment
+.venv/
+
+# macOS system files
+.DS_Store
+
+# Local environment secrets
+.env
+.env.*
+**/.env
+**/.env.*
