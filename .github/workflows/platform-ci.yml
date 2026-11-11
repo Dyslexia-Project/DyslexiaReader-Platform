@@ -1,13 +1,3 @@
-# =============================================================================
-# DyslexiaReader-Platform — Spring Boot + React CI Pipeline
-# =============================================================================
-# Triggers : every pull-request targeting `main`  (and direct pushes to main)
-# Jobs     :
-#   1. schema-check   – validates sample profiles against JSON Schema
-#   2. backend-test   – compiles the Spring Boot app and runs `mvn test`
-#   3. frontend-build – installs npm deps and runs `npm run build`
-# =============================================================================
-
 name: Platform CI
 
 on:
@@ -20,13 +10,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# ---------------------------------------------------------------------------
-# JOB 1 — Schema Contract Check
-# ---------------------------------------------------------------------------
-# Validates every JSON file inside docs/sample-profiles/ against the JSON
-# Schema at docs/contracts/reading-profile.schema.json using ajv-cli.
-# ---------------------------------------------------------------------------
 jobs:
+  # ---------------------------------------------------------------------------
+  # JOB 1 — Schema Contract Check
+  # ---------------------------------------------------------------------------
   schema-check:
     name: Schema Contract Check (ajv-cli)
     runs-on: ubuntu-latest
@@ -39,34 +26,37 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "npm"
-          # ADJUST: if your package.json lives in a subfolder (e.g., frontend/),
-          # add:  cache-dependency-path: frontend/package-lock.json
 
       - name: Install ajv-cli
         run: npm install -g ajv-cli ajv-formats
 
-      # ADJUST: change the paths below if your schema or samples live elsewhere.
-      - name: Validate sample profiles against schema
+      - name: Validate reading profile contracts against schema
         run: |
-          echo "Validating sample profiles..."
+          echo "Validating reading-profile contracts..."
           ajv validate \
-            --spec=draft2020 \
+            --spec=draft7 \
             -c ajv-formats \
             -s docs/contracts/reading-profile.schema.json \
-            -d "docs/sample-profiles/*.json"
-          echo "All sample profiles are valid."
+            -d docs/contracts/reading-profile.example.json
+          
+          # Also validate any sample profiles if present
+          if ls docs/sample-profiles/*.json 1> /dev/null 2>&1; then
+            ajv validate \
+              --spec=draft7 \
+              -c ajv-formats \
+              -s docs/contracts/reading-profile.schema.json \
+              -d "docs/sample-profiles/*.json"
+          fi
+          echo "All reading profile contracts are valid!"
 
   # ---------------------------------------------------------------------------
-  # JOB 2 — Spring Boot Backend (Maven)
+  # JOB 2 — Spring Boot Backend Tests (Gradle)
   # ---------------------------------------------------------------------------
   backend-test:
-    name: Spring Boot Tests (Maven)
+    name: Spring Boot Tests (Gradle)
     runs-on: ubuntu-latest
-    needs: schema-check       # schema must pass before we spend compute on tests
+    needs: schema-check
 
-    # ADJUST: set the Java version your project targets (17 or 21 recommended
-    # for Spring Boot 3.x)
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -76,71 +66,61 @@ jobs:
         with:
           java-version: "21"
           distribution: "temurin"
-          # ADJUST: if your pom.xml lives in a subfolder (e.g., backend/),
-          # add: cache: "maven"  and later prefix mvn calls with:
-          #   working-directory: backend
-          cache: "maven"
+          cache: "gradle"
 
-      # ADJUST: if your pom.xml is NOT in the repository root, add:
-      #   working-directory: backend
-      - name: Run Maven tests
-        run: mvn --batch-mode --no-transfer-progress test
+      - name: Make Gradle wrapper executable
+        run: chmod +x backend/gradlew
 
-      # Optional: publish Surefire test reports as a CI summary
-      - name: Publish test results
+      - name: Run Spring Boot Gradle tests
+        working-directory: backend
+        run: ./gradlew test --no-daemon
+
+      - name: Publish JUnit Test Report
         if: always()
         uses: dorny/test-reporter@v1
         with:
-          name: Maven Tests
-          path: "**/target/surefire-reports/TEST-*.xml"
+          name: Gradle Test Results
+          path: "backend/build/test-results/test/TEST-*.xml"
           reporter: java-junit
           fail-on-error: false
 
   # ---------------------------------------------------------------------------
-  # JOB 3 — React Frontend (npm)
+  # JOB 3 — React Frontend Build (Vite)
   # ---------------------------------------------------------------------------
   frontend-build:
-    name: React Frontend Build (npm)
+    name: React Frontend Build (Vite)
     runs-on: ubuntu-latest
-    needs: schema-check       # schema must pass first
+    needs: schema-check
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up Node.js
+        if: hashFiles('frontend/package.json') != ''
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          # ADJUST: if package.json is inside a subfolder (e.g., frontend/),
-          # change the cache-dependency-path below:
           cache: "npm"
-          cache-dependency-path: |
-            package-lock.json
-            # frontend/package-lock.json   <-- uncomment if in subfolder
+          cache-dependency-path: "frontend/package-lock.json"
 
-      # ADJUST: if your React app is in a subfolder, replace the commands with:
-      #   working-directory: frontend
-      #   run: npm ci
       - name: Install dependencies
-        run: npm ci
-        # working-directory: frontend    # <-- uncomment if in subfolder
+        if: hashFiles('frontend/package.json') != ''
+        working-directory: frontend
+        run: |
+          if [ -f "package-lock.json" ]; then
+            npm ci
+          else
+            npm install
+          fi
 
-      # ADJUST: same working-directory note as above
-      - name: Production build
+      - name: Production build (tsc + vite build)
+        if: hashFiles('frontend/package.json') != ''
+        working-directory: frontend
         run: npm run build
-        # working-directory: frontend    # <-- uncomment if in subfolder
         env:
-          # Fail the build if there are any CI-specific warnings
           CI: true
 
-      # Optional: upload the production build as an artifact for inspection
-      - name: Upload frontend build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          # ADJUST: change `build/` to `dist/` if you use Vite instead of CRA
-          name: react-build-${{ github.sha }}
-          path: build/
-          # path: frontend/build/     # <-- uncomment if in subfolder
-          retention-days: 7
-          if-no-files-found: warn
+      - name: Notice if frontend is awaiting merge
+        if: hashFiles('frontend/package.json') == ''
+        run: echo "::notice::frontend/package.json not yet in branch. Frontend checks will run automatically once frontend PR is merged."
