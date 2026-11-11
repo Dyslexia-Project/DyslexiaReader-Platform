@@ -1,5 +1,5 @@
 package com.example.dyslexiaapp.speech;
-
+import org.springframework.beans.factory.annotation.Autowired;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -42,12 +42,19 @@ public class GoogleCloudTtsClient {
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
 
-    public GoogleCloudTtsClient(ObjectMapper objectMapper) {
-        this(objectMapper, null, "https://texttospeech.googleapis.com/v1beta1/text:synthesize", false);
+    // 1. Constructor por defecto para Spring (instancia new ObjectMapper())
+    public GoogleCloudTtsClient() {
+        this(new ObjectMapper());
     }
 
+    // 2. Constructor secundario
+    public GoogleCloudTtsClient(ObjectMapper objectMapper) {
+        this(objectMapper, null, "https://texttospeech.googleapis.com/v1beta1/text:synthesize", true);
+    }
+
+    // 3. Constructor principal
     public GoogleCloudTtsClient(ObjectMapper objectMapper, String apiKey, String endpoint, boolean demoMode) {
-        this.objectMapper = objectMapper;
+        this.objectMapper = (objectMapper != null) ? objectMapper : new ObjectMapper();
         this.apiKey = apiKey;
         this.endpoint = (endpoint != null && !endpoint.isBlank()) ? endpoint : "https://texttospeech.googleapis.com/v1beta1/text:synthesize";
         this.demoMode = demoMode;
