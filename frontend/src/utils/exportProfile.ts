@@ -1,11 +1,14 @@
 import type { ReadingProfile } from '../types/profile';
+import { toCanonicalProfile } from '../types/profile';
 
-// Compiles and downloads the active reading profile as a JSON file compatible with the C++ app
+// Compiles and downloads the active reading profile in canonical schema v1 JSON
+// compatible with both DyslexiaReader-Desktop and Spring Boot /api/v1/profiles/share.
 export function exportProfileJson(profile: ReadingProfile): void {
-  const jsonString = JSON.stringify(profile, null, 2);
+  const canonical = toCanonicalProfile(profile);
+  const jsonString = JSON.stringify(canonical, null, 2) + '\n';
   const blob = new Blob([jsonString], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
-  
+
   const link = document.createElement('a');
   link.href = url;
   link.download = 'reading-profile.json';
