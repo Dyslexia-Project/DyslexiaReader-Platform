@@ -104,7 +104,10 @@ export const ProfileEditor: React.FC<ProfileEditorProps> = ({
       </div>
 
       <div style={{ marginBottom: '15px' }}>
-        <label htmlFor="line-width-range"><b>Line Width:</b> {profile.lineWidthCh}ch</label>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+          <label htmlFor="line-width-range"><b>Line Width:</b> {profile.lineWidthCh}ch</label>
+          <span style={{ fontSize: '11px', color: '#666' }}>Optimal: 45–65ch</span>
+        </div>
         <input
           id="line-width-range"
           type="range"

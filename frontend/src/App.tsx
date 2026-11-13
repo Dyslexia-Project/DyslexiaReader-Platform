@@ -58,7 +58,7 @@ export default function App() {
   const [shareCodeInput, setShareCodeInput] = useState<string>('');
   const [generatedShareCode, setGeneratedShareCode] = useState<string>('');
   const [sampleText, setSampleText] = useState<string>(
-    'Dyslexia is a neurodivergent condition that affects how the brain processes written text. Adjusting typographic controls, letter spacing, and line focus significantly improves readability and comprehension.',
+    'Dyslexia is a neurodivergent condition that affects how the brain processes written text. Adjusting typographic controls, letter spacing, and line focus significantly improves readability and comprehension. When line width is adjusted between 45 and 65 characters, it reduces visual crowding and prevents readers from losing their place across lines.',
   );
 
   // Audio & Karaoke TTS State
@@ -457,7 +457,8 @@ export default function App() {
               padding: '30px',
               borderRadius: '8px',
               border: `2px solid ${themePalette.border}`,
-              overflow: 'hidden',
+              overflowX: 'auto',
+              overflowY: 'hidden',
               minHeight: '250px',
               backgroundColor: themePalette.background,
               color: themePalette.text,
@@ -485,7 +486,21 @@ export default function App() {
               />
             )}
 
-            <div style={{ maxWidth: `${profile.lineWidthCh}ch`, position: 'relative' }}>
+            <div
+              style={{
+                width: `${profile.lineWidthCh}ch`,
+                maxWidth: '100%',
+                position: 'relative',
+                borderRight: `2px dashed ${themePalette.focus}88`,
+                paddingRight: '12px',
+                boxSizing: 'border-box',
+                transition: 'width 0.15s ease-out',
+              }}
+              title={`Line Width: ${profile.lineWidthCh}ch`}
+            >
+              <div style={{ fontSize: '11px', opacity: 0.6, marginBottom: '6px', userSelect: 'none' }}>
+                Column Width: {profile.lineWidthCh}ch (dashed line marks margin)
+              </div>
               {renderInteractiveText()}
             </div>
           </div>
